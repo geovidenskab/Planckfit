@@ -449,6 +449,7 @@
                 <div class="calibration-info" id="calibrationInfo">
                     K(λ) = 14.66 - 0.00807λ - 9.52e-05λ² + 1.19e-07λ³
                 </div>
+                <div id="calPlot" style="width:100%; height:200px; margin:10px 0;"></div>
                 
                 <h3>Ny kalibrering</h3>
                 <p class="info-text">
@@ -977,10 +978,35 @@
         
         function updateCalibrationInfo() {
             const [a, b, c, d] = calibrationCoeffs;
-            document.getElementById('calibrationInfo').innerHTML = 
+            document.getElementById('calibrationInfo').innerHTML =
                 `K(λ) = ${a.toFixed(2)} ${b >= 0 ? '+' : ''}${b.toFixed(6)}λ ${c >= 0 ? '+' : ''}${c.toExponential(2)}λ² ${d >= 0 ? '+' : ''}${d.toExponential(2)}λ³`;
+            plotCalibration();
         }
-        
+
+        function plotCalibration() {
+            const wavelengths = [];
+            const corrections = [];
+            for (let wl = 380; wl <= 950; wl += 5) {
+                wavelengths.push(wl);
+                corrections.push(getCorrection(wl));
+            }
+
+            Plotly.newPlot('calPlot', [{
+                x: wavelengths,
+                y: corrections,
+                mode: 'lines',
+                name: 'K(λ)',
+                line: { color: '#2c3e50', width: 2 }
+            }], {
+                title: { text: 'Korrektionsfunktion K(λ)', font: { size: 13, color: '#333' } },
+                xaxis: { title: 'Bølgelængde (nm)', range: [380, 950], gridcolor: '#ddd' },
+                yaxis: { title: 'K(λ)', gridcolor: '#ddd' },
+                margin: { t: 35, r: 15, b: 40, l: 45 },
+                paper_bgcolor: '#fff',
+                plot_bgcolor: '#fff'
+            }, { responsive: true });
+        }
+
         Plotly.newPlot('plot', [], {
             title: { text: 'Upload data for at starte', font: { color: '#666' } },
             xaxis: { title: 'Bølgelængde (nm)', range: [350, 980], gridcolor: '#ddd' },
@@ -989,6 +1015,8 @@
             paper_bgcolor: '#fff',
             plot_bgcolor: '#fff'
         }, { responsive: true });
+
+        plotCalibration();
     </script>
 </body>
 </html>
