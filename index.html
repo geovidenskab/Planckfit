@@ -337,6 +337,35 @@
             font-size: 13px;
             font-weight: bold;
         }
+        .section-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .section-tab {
+            padding: 10px 20px;
+            background: #e8e8e8;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.2s;
+        }
+        .section-tab:hover {
+            background: #ddd;
+        }
+        .section-tab.active {
+            background: #2c3e50;
+            color: white;
+        }
+        .section-content {
+            display: none;
+        }
+        .section-content.active {
+            display: block;
+        }
         @media (max-width: 900px) {
             .main-layout {
                 grid-template-columns: 1fr;
@@ -481,99 +510,81 @@
             </div>
 
             <div class="explanation-section">
-                <h2>Hvordan virker Planck Fit?</h2>
-
-                <p>Dette værktøj bestemmer temperaturen af en varm lyskilde (f.eks. en glødelampe) ved at analysere dens lysspektrum. Metoden bygger på, at varme objekter udsender lys med en karakteristisk fordeling, som afhænger af temperaturen.</p>
-
-                <h3>Sådan bruger du værktøjet</h3>
-                <ol class="step-list">
-                    <li><strong>Upload dit spektrum:</strong> Træk din datafil ind i uploadfeltet. Filen kan være CSV, TXT eller Logger Pro-format (.cmbl). Data skal indeholde bølgelængde (nm) og intensitet.</li>
-                    <li><strong>Vælg bølgelængde-område:</strong> Indstil min og max bølgelængde for at fokusere på det relevante område af spektret. Typisk 450-850 nm for glødelamper.</li>
-                    <li><strong>Vælg korrektion:</strong> Vælg "Kalibreret" for at kompensere for spektrometerets følsomhed, eller "Ingen korrektion" for at se rådata.</li>
-                    <li><strong>Beregn fit:</strong> Klik på knappen, og programmet finder den temperatur, hvor Plancks formel bedst matcher dine data.</li>
-                </ol>
-
-                <h3>Plancks strålingslov</h3>
-                <p>Alle varme objekter udsender elektromagnetisk stråling. Jo varmere objektet er, desto mere energi udsendes, og desto kortere bliver den dominerende bølgelængde. Dette beskrives af Plancks strålingslov:</p>
-
-                <div class="formula-box">
-                    B(λ,T) = (2hc²/λ⁵) · 1/(e<sup>hc/λkT</sup> - 1)
+                <div class="section-tabs">
+                    <button class="section-tab active" onclick="showSection('student')">For elever</button>
+                    <button class="section-tab" onclick="showSection('teacher')">For læreren</button>
                 </div>
 
-                <p>hvor λ er bølgelængden, T er temperaturen, h er Plancks konstant, c er lysets hastighed, og k er Boltzmanns konstant.</p>
+                <div id="studentSection" class="section-content active">
+                    <h2>Hvad gør Planck Fit?</h2>
+                    <p>Dette værktøj finder temperaturen på en varm lyskilde (f.eks. en glødelampe) ved at analysere det lys, den udsender.</p>
 
-                <div class="concept-box">
-                    <strong>Hvad er et sortlegeme?</strong><br>
-                    Et ideelt sortlegeme absorberer al indkommende stråling og genudsender den som termisk stråling. Glødelamper og stjerner opfører sig tilnærmelsesvist som sortlegemer, hvilket gør Plancks lov anvendelig.
-                </div>
+                    <h3>Sådan bruger du det</h3>
+                    <ol class="step-list">
+                        <li><strong>Upload data:</strong> Træk din fil ind (CSV, TXT eller .cmbl fra Logger Pro)</li>
+                        <li><strong>Vælg område:</strong> Indstil bølgelængde-intervallet (typisk 450-850 nm)</li>
+                        <li><strong>Beregn:</strong> Klik på knappen og se resultatet</li>
+                    </ol>
 
-                <h3>Wiens forskydningslov</h3>
-                <p>Wiens forskydningslov beskriver sammenhængen mellem et sortlegemes temperatur og den bølgelængde, hvor det udsender mest lys (toppen af Planck-kurven):</p>
+                    <h3>Den korte forklaring</h3>
+                    <p>Varme ting lyser. Jo varmere, desto mere blåligt lys. Ved at måle farvefordelingen kan vi beregne temperaturen.</p>
 
-                <div class="formula-box">
-                    λ<sub>max</sub> = 2.898 × 10⁶ nm·K / T
-                </div>
+                    <p><strong>Wien-toppen</strong> er den bølgelængde, hvor lyskilden udsender mest energi:</p>
+                    <div class="formula-box">
+                        λ<sub>max</sub> = 2.898 × 10⁶ nm·K / T
+                    </div>
+                    <p>Solen (5778 K) har top ved 501 nm (grøn). En glødelampe (2500 K) har top ved 1160 nm (infrarød).</p>
 
-                <p>For eksempel: Solen har en overfladetemperatur på ca. 5778 K, hvilket giver λ<sub>max</sub> ≈ 501 nm (grønt lys). En glødelampe på 2500 K har λ<sub>max</sub> ≈ 1160 nm (infrarødt).</p>
+                    <h3>Hvorfor bruger vi kalibrering?</h3>
+                    <p>Spektrometeret måler ikke alle farver lige godt. Kalibreringen retter op på dette, så vi får den rigtige temperatur.</p>
 
-                <div class="teacher-note">
-                    Wiens lov kan bruges til at lave et hurtigt estimat af temperaturen ud fra spektrets top, men Planck-fittet giver en mere præcis værdi, da det bruger hele spektret.
-                </div>
+                    <p>Uden kalibrering ser toppen ud til at ligge et andet sted end den burde ifølge Wiens lov.</p>
 
-                <h3>Hvorfor matcher Wien-toppen ikke mine målte data?</h3>
-                <p>Når du måler et spektrum, vil du ofte se, at toppen i dine <em>rå data</em> ligger ved en anden bølgelængde end den teoretiske Wien-top. Dette skyldes <strong>ikke</strong> at fysikken er forkert, men at spektrometeret har forskellige følsomheder ved forskellige bølgelængder.</p>
-
-                <div class="concept-box">
-                    <strong>Spektrometerets responsfunktion</strong><br>
-                    Et spektrometer (som Red Tide) måler ikke alle bølgelængder lige godt. Detektoren er typisk mest følsom i det synlige område og mindre følsom i infrarødt og ultraviolet. Det betyder, at det målte signal er:<br><br>
-                    <em>Målt(λ) = Sand(λ) × K(λ)</em><br><br>
-                    hvor K(λ) er spektrometerets bølgelængde-afhængige følsomhed (responsfunktion).
-                </div>
-
-                <p>Konsekvensen er, at toppen i dine rå data bliver "trukket" mod de bølgelængder, hvor spektrometeret er mest følsomt. For de fleste spektrometre betyder det, at den målte top ligger ved kortere bølgelængder end den sande Wien-top.</p>
-
-                <h3>Hvad gør kalibreringen?</h3>
-                <p>Kalibreringsfunktionen K(λ) korrigerer for spektrometerets uens følsomhed. Ved at dividere de målte data med K(λ) får vi det "sande" spektrum:</p>
-
-                <div class="formula-box">
-                    Sand(λ) = Målt(λ) / K(λ)
-                </div>
-
-                <p><strong>Hvordan bestemmes K(λ)?</strong> Ved at måle et spektrum fra en kendt kilde - typisk Solen. Da vi ved, at Solen opfører sig som et sortlegeme ved ca. 5778 K, kan vi sammenligne det målte solspektrum med det teoretiske og udlede korrektionsfunktionen.</p>
-
-                <div class="teacher-note">
-                    Eleverne kan selv lave kalibreringen ved at måle et solspektrum og uploade det under "Kalibrering"-fanen. Dette giver en god forståelse for, hvorfor kalibrering er nødvendig i eksperimentel fysik. Standard-kalibreringen er baseret på typiske Red Tide-spektrometre.
-                </div>
-
-                <h3>Fortolkning af resultaterne</h3>
-                <ul>
-                    <li><strong>Temperatur (K og °C):</strong> Den beregnede temperatur af lyskilden baseret på Planck-fittet.</li>
-                    <li><strong>R² (determinationskoefficient):</strong> Et mål for hvor godt fittet matcher data. R² = 1 er perfekt match. Værdier over 0.99 indikerer et godt fit.</li>
-                    <li><strong>Wien peak:</strong> Den teoretiske bølgelængde for maksimal intensitet, beregnet fra den fittede temperatur via Wiens lov.</li>
-                </ul>
-
-                <div class="concept-box">
-                    <strong>Hvorfor passer den røde kurve ikke perfekt?</strong><br>
-                    Afvigelser mellem fit og data kan skyldes:
+                    <h3>Hvad betyder resultaterne?</h3>
                     <ul>
-                        <li>Lyskilden er ikke et perfekt sortlegeme (f.eks. har glas i pæren absorptionsbånd)</li>
-                        <li>Atmosfærisk absorption (især ved høje bølgelængder)</li>
-                        <li>Støj i målingerne</li>
-                        <li>Kalibreringen er ikke perfekt til dit specifikke spektrometer</li>
+                        <li><strong>Temperatur:</strong> Lyskildenpres beregnede temperatur</li>
+                        <li><strong>R²:</strong> Hvor godt fittet passer (1.0 = perfekt)</li>
+                        <li><strong>Wien peak:</strong> Teoretisk top ud fra temperaturen</li>
                     </ul>
                 </div>
 
-                <h3>Praktiske tips</h3>
-                <ul>
-                    <li>Brug et mørkt rum for at minimere baggrundslys</li>
-                    <li>Lad glødelampen varme op i et par minutter før måling</li>
-                    <li>Tag flere målinger og sammenlign resultaterne</li>
-                    <li>Eksperimenter med forskellige bølgelængde-intervaller for at se, hvordan det påvirker resultatet</li>
-                    <li>Prøv at variere lysstyrken (spændingen) på glødelampen og se, hvordan temperaturen ændrer sig</li>
-                </ul>
+                <div id="teacherSection" class="section-content">
+                    <h2>Teknisk baggrund</h2>
 
-                <div class="teacher-note">
-                    Dette værktøj kan bruges til at illustrere flere centrale fysiske koncepter: kvantemekanik (Plancks lov løste "ultravioletkatastrofen"), termodynamik (sortlegemestråling), og eksperimentel metode (kalibrering, fitting, fejlkilder). Det er også relevant for astrofysik, da samme metode bruges til at bestemme stjerners overfladetemperatur.
+                    <h3>Plancks strålingslov</h3>
+                    <div class="formula-box">
+                        B(λ,T) = (2hc²/λ⁵) · 1/(e<sup>hc/λkT</sup> - 1)
+                    </div>
+                    <p>Programmet fitter denne funktion til de målte data ved at minimere sum af kvadrerede residualer (least squares). Temperatur T og amplitude A varieres, mens fysiske konstanter er fastlagt.</p>
+
+                    <h3>Spektrometerets responsfunktion</h3>
+                    <p>Det målte signal er produktet af det sande spektrum og instrumentets bølgelængdeafhængige følsomhed K(λ):</p>
+                    <div class="formula-box">
+                        I<sub>målt</sub>(λ) = I<sub>sand</sub>(λ) · K(λ)
+                    </div>
+                    <p>For Red Tide-spektrometre falder følsomheden markant i NIR-området. Dette forskyder den observerede spektraltop mod kortere bølgelængder relativt til Wien-toppen. Korrektionsfunktionen er et 3. grads polynomium fittet til forholdet mellem målt solspektrum og teoretisk sortlegemespektrum ved 5778 K.</p>
+
+                    <h3>Kalibreringsprocedure</h3>
+                    <p>Standard-kalibreringen K(λ) = a + bλ + cλ² + dλ³ er bestemt ud fra et repræsentativt Red Tide-spektrometer. Elever kan uploade eget solspektrum under "Kalibrering"-fanen for at bestemme korrektion til deres specifikke instrument.</p>
+
+                    <h3>Didaktiske muligheder</h3>
+                    <ul>
+                        <li><strong>Kvantemekanik:</strong> Plancks lov og ultravioletkatastrofen</li>
+                        <li><strong>Astrofysik:</strong> Stjernetemperaturer fra spektralanalyse</li>
+                        <li><strong>Eksperimentel metode:</strong> Kalibrering, systematiske fejl, fitting</li>
+                        <li><strong>Øvelse:</strong> Lad elever variere spændingen på glødelampen og plot T vs. P</li>
+                    </ul>
+
+                    <h3>Typiske fejlkilder</h3>
+                    <ul>
+                        <li>Baggrundslys (mørklæg rummet)</li>
+                        <li>Mætning af detektor (reducer eksponeringstid)</li>
+                        <li>Atmosfærisk absorption i NIR</li>
+                        <li>Afvigelse fra sortlegeme-opførsel (glasabsorption, emissivitet &lt; 1)</li>
+                    </ul>
+
+                    <h3>Fit-algoritme</h3>
+                    <p>Grov søgning: T ∈ [1000, 6000] K i trin af 50 K. Fin søgning: ±50 K omkring bedste grov-værdi i trin af 1 K. Amplitude bestemmes analytisk for hver T ved at matche maksimum.</p>
                 </div>
             </div>
         </div>
@@ -621,6 +632,13 @@
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelector(`.tab:nth-child(${name === 'data' ? 1 : 2})`).classList.add('active');
             document.getElementById(name + 'Tab').classList.add('active');
+        }
+
+        function showSection(name) {
+            document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.section-tab:nth-child(${name === 'student' ? 1 : 2})`).classList.add('active');
+            document.getElementById(name + 'Section').classList.add('active');
         }
         
         function parseFile(content, filename) {
