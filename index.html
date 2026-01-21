@@ -880,9 +880,39 @@
         }
 
         function drawMainPlot() {
-            if (!lastPlotData) return;
-            const { wavelength, intensity, fittedCurve, bestT, rSquared, minWl, maxWl } = lastPlotData;
             const showCal = document.getElementById('showCalibration').checked;
+
+            if (!lastPlotData) {
+                // Ingen data endnu - vis kun K(λ) hvis valgt
+                const traces = [];
+                let layout = {
+                    title: { text: 'Upload data for at starte', font: { color: '#666' } },
+                    xaxis: { title: 'Bølgelængde (nm)', range: [350, 980], gridcolor: '#ddd' },
+                    yaxis: { title: 'Intensitet', gridcolor: '#ddd' },
+                    margin: { t: 50, r: showCal ? 60 : 20, b: 50, l: 60 },
+                    paper_bgcolor: '#fff',
+                    plot_bgcolor: '#fff'
+                };
+
+                if (showCal) {
+                    const calWl = [], calK = [];
+                    for (let wl = 380; wl <= 950; wl += 5) {
+                        calWl.push(wl);
+                        calK.push(getCorrection(wl));
+                    }
+                    traces.push({
+                        x: calWl, y: calK, mode: 'lines', name: 'K(λ)', yaxis: 'y2',
+                        line: { color: '#27ae60', width: 2, dash: 'dot' }
+                    });
+                    layout.yaxis2 = { title: 'K(λ)', overlaying: 'y', side: 'right', gridcolor: '#ddd', showgrid: false };
+                    layout.legend = { x: 0.02, y: 0.98 };
+                }
+
+                Plotly.newPlot('plot', traces, layout, { responsive: true });
+                return;
+            }
+
+            const { wavelength, intensity, fittedCurve, bestT, rSquared, minWl, maxWl } = lastPlotData;
 
             const traces = [
                 { x: wavelength, y: intensity, mode: 'lines', name: 'Målt data', line: { color: '#34495e', width: 1.5 } },
@@ -1042,15 +1072,7 @@
             }, { responsive: true });
         }
 
-        Plotly.newPlot('plot', [], {
-            title: { text: 'Upload data for at starte', font: { color: '#666' } },
-            xaxis: { title: 'Bølgelængde (nm)', range: [350, 980], gridcolor: '#ddd' },
-            yaxis: { title: 'Intensitet', gridcolor: '#ddd' },
-            margin: { t: 50, r: 20, b: 50, l: 60 },
-            paper_bgcolor: '#fff',
-            plot_bgcolor: '#fff'
-        }, { responsive: true });
-
+        drawMainPlot();
         plotCalibration();
     </script>
 </body>
