@@ -919,6 +919,17 @@
                 { x: wavelength, y: fittedCurve, mode: 'lines', name: `Planck fit (T=${bestT} K)`, line: { color: '#c0392b', width: 2.5 } }
             ];
 
+            const layout = {
+                title: { text: `T = ${bestT} K, R² = ${rSquared.toFixed(4)}`, font: { size: 16, color: '#2c3e50' } },
+                xaxis: { title: 'Bølgelængde (nm)', range: [350, 980], gridcolor: '#ddd' },
+                yaxis: { title: 'Intensitet', gridcolor: '#ddd' },
+                shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: minWl, x1: maxWl, y0: 0, y1: 1, fillcolor: 'rgba(52,73,94,0.08)', line: { width: 0 } }],
+                legend: { x: 0.02, y: 0.98 },
+                margin: { t: 50, r: 20, b: 50, l: 60 },
+                paper_bgcolor: '#fff',
+                plot_bgcolor: '#fff'
+            };
+
             if (showCal) {
                 const calWl = [], calK = [];
                 for (let wl = 380; wl <= 950; wl += 5) {
@@ -929,19 +940,11 @@
                     x: calWl, y: calK, mode: 'lines', name: 'K(λ)', yaxis: 'y2',
                     line: { color: '#27ae60', width: 2, dash: 'dot' }
                 });
+                layout.yaxis2 = { title: 'K(λ)', overlaying: 'y', side: 'right', gridcolor: '#ddd', showgrid: false };
+                layout.margin.r = 60;
             }
 
-            Plotly.newPlot('plot', traces, {
-                title: { text: `T = ${bestT} K, R² = ${rSquared.toFixed(4)}`, font: { size: 16, color: '#2c3e50' } },
-                xaxis: { title: 'Bølgelængde (nm)', range: [350, 980], gridcolor: '#ddd' },
-                yaxis: { title: 'Intensitet', gridcolor: '#ddd' },
-                yaxis2: showCal ? { title: 'K(λ)', overlaying: 'y', side: 'right', gridcolor: '#ddd', showgrid: false } : undefined,
-                shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: minWl, x1: maxWl, y0: 0, y1: 1, fillcolor: 'rgba(52,73,94,0.08)', line: { width: 0 } }],
-                legend: { x: 0.02, y: 0.98 },
-                margin: { t: 50, r: showCal ? 60 : 20, b: 50, l: 60 },
-                paper_bgcolor: '#fff',
-                plot_bgcolor: '#fff'
-            }, { responsive: true });
+            Plotly.newPlot('plot', traces, layout, { responsive: true });
         }
 
         function updatePlotWithCalibration() {
