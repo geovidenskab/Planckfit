@@ -242,6 +242,101 @@
             color: #666;
             line-height: 1.4;
         }
+        .explanation-section {
+            background: #fff;
+            border-radius: 4px;
+            padding: 25px;
+            border: 1px solid #ccc;
+            margin-top: 15px;
+        }
+        .explanation-section h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            margin: 0 0 15px 0;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        .explanation-section h3 {
+            color: #34495e;
+            font-size: 16px;
+            margin: 20px 0 10px 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .explanation-section p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #333;
+            margin: 10px 0;
+        }
+        .explanation-section ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        .explanation-section li {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            margin: 5px 0;
+        }
+        .formula-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            text-align: center;
+            font-size: 16px;
+        }
+        .concept-box {
+            background: #e8f4f8;
+            border-left: 4px solid #2c3e50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .concept-box strong {
+            color: #2c3e50;
+        }
+        .teacher-note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 13px;
+        }
+        .teacher-note::before {
+            content: "🎓 Til læreren: ";
+            font-weight: bold;
+        }
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding-left: 0;
+        }
+        .step-list li {
+            counter-increment: step-counter;
+            padding-left: 40px;
+            position: relative;
+            margin: 15px 0;
+        }
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #2c3e50;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            font-size: 13px;
+            font-weight: bold;
+        }
         @media (max-width: 900px) {
             .main-layout {
                 grid-template-columns: 1fr;
@@ -383,6 +478,103 @@
             
             <div class="plot-container">
                 <div id="plot"></div>
+            </div>
+
+            <div class="explanation-section">
+                <h2>Hvordan virker Planck Fit?</h2>
+
+                <p>Dette værktøj bestemmer temperaturen af en varm lyskilde (f.eks. en glødelampe) ved at analysere dens lysspektrum. Metoden bygger på, at varme objekter udsender lys med en karakteristisk fordeling, som afhænger af temperaturen.</p>
+
+                <h3>Sådan bruger du værktøjet</h3>
+                <ol class="step-list">
+                    <li><strong>Upload dit spektrum:</strong> Træk din datafil ind i uploadfeltet. Filen kan være CSV, TXT eller Logger Pro-format (.cmbl). Data skal indeholde bølgelængde (nm) og intensitet.</li>
+                    <li><strong>Vælg bølgelængde-område:</strong> Indstil min og max bølgelængde for at fokusere på det relevante område af spektret. Typisk 450-850 nm for glødelamper.</li>
+                    <li><strong>Vælg korrektion:</strong> Vælg "Kalibreret" for at kompensere for spektrometerets følsomhed, eller "Ingen korrektion" for at se rådata.</li>
+                    <li><strong>Beregn fit:</strong> Klik på knappen, og programmet finder den temperatur, hvor Plancks formel bedst matcher dine data.</li>
+                </ol>
+
+                <h3>Plancks strålingslov</h3>
+                <p>Alle varme objekter udsender elektromagnetisk stråling. Jo varmere objektet er, desto mere energi udsendes, og desto kortere bliver den dominerende bølgelængde. Dette beskrives af Plancks strålingslov:</p>
+
+                <div class="formula-box">
+                    B(λ,T) = (2hc²/λ⁵) · 1/(e<sup>hc/λkT</sup> - 1)
+                </div>
+
+                <p>hvor λ er bølgelængden, T er temperaturen, h er Plancks konstant, c er lysets hastighed, og k er Boltzmanns konstant.</p>
+
+                <div class="concept-box">
+                    <strong>Hvad er et sortlegeme?</strong><br>
+                    Et ideelt sortlegeme absorberer al indkommende stråling og genudsender den som termisk stråling. Glødelamper og stjerner opfører sig tilnærmelsesvist som sortlegemer, hvilket gør Plancks lov anvendelig.
+                </div>
+
+                <h3>Wiens forskydningslov</h3>
+                <p>Wiens forskydningslov beskriver sammenhængen mellem et sortlegemes temperatur og den bølgelængde, hvor det udsender mest lys (toppen af Planck-kurven):</p>
+
+                <div class="formula-box">
+                    λ<sub>max</sub> = 2.898 × 10⁶ nm·K / T
+                </div>
+
+                <p>For eksempel: Solen har en overfladetemperatur på ca. 5778 K, hvilket giver λ<sub>max</sub> ≈ 501 nm (grønt lys). En glødelampe på 2500 K har λ<sub>max</sub> ≈ 1160 nm (infrarødt).</p>
+
+                <div class="teacher-note">
+                    Wiens lov kan bruges til at lave et hurtigt estimat af temperaturen ud fra spektrets top, men Planck-fittet giver en mere præcis værdi, da det bruger hele spektret.
+                </div>
+
+                <h3>Hvorfor matcher Wien-toppen ikke mine målte data?</h3>
+                <p>Når du måler et spektrum, vil du ofte se, at toppen i dine <em>rå data</em> ligger ved en anden bølgelængde end den teoretiske Wien-top. Dette skyldes <strong>ikke</strong> at fysikken er forkert, men at spektrometeret har forskellige følsomheder ved forskellige bølgelængder.</p>
+
+                <div class="concept-box">
+                    <strong>Spektrometerets responsfunktion</strong><br>
+                    Et spektrometer (som Red Tide) måler ikke alle bølgelængder lige godt. Detektoren er typisk mest følsom i det synlige område og mindre følsom i infrarødt og ultraviolet. Det betyder, at det målte signal er:<br><br>
+                    <em>Målt(λ) = Sand(λ) × K(λ)</em><br><br>
+                    hvor K(λ) er spektrometerets bølgelængde-afhængige følsomhed (responsfunktion).
+                </div>
+
+                <p>Konsekvensen er, at toppen i dine rå data bliver "trukket" mod de bølgelængder, hvor spektrometeret er mest følsomt. For de fleste spektrometre betyder det, at den målte top ligger ved kortere bølgelængder end den sande Wien-top.</p>
+
+                <h3>Hvad gør kalibreringen?</h3>
+                <p>Kalibreringsfunktionen K(λ) korrigerer for spektrometerets uens følsomhed. Ved at dividere de målte data med K(λ) får vi det "sande" spektrum:</p>
+
+                <div class="formula-box">
+                    Sand(λ) = Målt(λ) / K(λ)
+                </div>
+
+                <p><strong>Hvordan bestemmes K(λ)?</strong> Ved at måle et spektrum fra en kendt kilde - typisk Solen. Da vi ved, at Solen opfører sig som et sortlegeme ved ca. 5778 K, kan vi sammenligne det målte solspektrum med det teoretiske og udlede korrektionsfunktionen.</p>
+
+                <div class="teacher-note">
+                    Eleverne kan selv lave kalibreringen ved at måle et solspektrum og uploade det under "Kalibrering"-fanen. Dette giver en god forståelse for, hvorfor kalibrering er nødvendig i eksperimentel fysik. Standard-kalibreringen er baseret på typiske Red Tide-spektrometre.
+                </div>
+
+                <h3>Fortolkning af resultaterne</h3>
+                <ul>
+                    <li><strong>Temperatur (K og °C):</strong> Den beregnede temperatur af lyskilden baseret på Planck-fittet.</li>
+                    <li><strong>R² (determinationskoefficient):</strong> Et mål for hvor godt fittet matcher data. R² = 1 er perfekt match. Værdier over 0.99 indikerer et godt fit.</li>
+                    <li><strong>Wien peak:</strong> Den teoretiske bølgelængde for maksimal intensitet, beregnet fra den fittede temperatur via Wiens lov.</li>
+                </ul>
+
+                <div class="concept-box">
+                    <strong>Hvorfor passer den røde kurve ikke perfekt?</strong><br>
+                    Afvigelser mellem fit og data kan skyldes:
+                    <ul>
+                        <li>Lyskilden er ikke et perfekt sortlegeme (f.eks. har glas i pæren absorptionsbånd)</li>
+                        <li>Atmosfærisk absorption (især ved høje bølgelængder)</li>
+                        <li>Støj i målingerne</li>
+                        <li>Kalibreringen er ikke perfekt til dit specifikke spektrometer</li>
+                    </ul>
+                </div>
+
+                <h3>Praktiske tips</h3>
+                <ul>
+                    <li>Brug et mørkt rum for at minimere baggrundslys</li>
+                    <li>Lad glødelampen varme op i et par minutter før måling</li>
+                    <li>Tag flere målinger og sammenlign resultaterne</li>
+                    <li>Eksperimenter med forskellige bølgelængde-intervaller for at se, hvordan det påvirker resultatet</li>
+                    <li>Prøv at variere lysstyrken (spændingen) på glødelampen og se, hvordan temperaturen ændrer sig</li>
+                </ul>
+
+                <div class="teacher-note">
+                    Dette værktøj kan bruges til at illustrere flere centrale fysiske koncepter: kvantemekanik (Plancks lov løste "ultravioletkatastrofen"), termodynamik (sortlegemestråling), og eksperimentel metode (kalibrering, fitting, fejlkilder). Det er også relevant for astrofysik, da samme metode bruges til at bestemme stjerners overfladetemperatur.
+                </div>
             </div>
         </div>
     </div>
