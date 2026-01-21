@@ -440,7 +440,13 @@
                         <option value="none">Ingen korrektion</option>
                     </select>
                 </div>
-                
+                <div class="control-group" style="margin-top:10px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="showCalibration" style="width:auto;" onchange="updatePlotWithCalibration()">
+                        Vis K(λ) på grafen
+                    </label>
+                </div>
+
                 <button id="fitBtn" onclick="performFit()" disabled>Beregn Planck-fit</button>
             </div>
             
@@ -597,6 +603,7 @@
         let selectedDataset = 0;
         let calibrationCoeffs = [14.66, -0.008065, -9.518e-05, 1.189e-07];
         let calData = null;
+        let lastPlotData = null;
         
         const referenceSolar = generateReferenceSolar();
         
@@ -867,20 +874,48 @@
             document.getElementById('wienPeak').textContent = Math.round(2898000 / bestT);
             
             const fittedCurve = wavelength.map(wl => planckWithCorrection(wl, bestA, bestT, useCorr));
-            
-            Plotly.newPlot('plot', [
+
+            lastPlotData = { wavelength, intensity, fittedCurve, bestT, rSquared, minWl, maxWl };
+            drawMainPlot();
+        }
+
+        function drawMainPlot() {
+            if (!lastPlotData) return;
+            const { wavelength, intensity, fittedCurve, bestT, rSquared, minWl, maxWl } = lastPlotData;
+            const showCal = document.getElementById('showCalibration').checked;
+
+            const traces = [
                 { x: wavelength, y: intensity, mode: 'lines', name: 'Målt data', line: { color: '#34495e', width: 1.5 } },
                 { x: wavelength, y: fittedCurve, mode: 'lines', name: `Planck fit (T=${bestT} K)`, line: { color: '#c0392b', width: 2.5 } }
-            ], {
+            ];
+
+            if (showCal) {
+                const calWl = [], calK = [];
+                for (let wl = 380; wl <= 950; wl += 5) {
+                    calWl.push(wl);
+                    calK.push(getCorrection(wl));
+                }
+                traces.push({
+                    x: calWl, y: calK, mode: 'lines', name: 'K(λ)', yaxis: 'y2',
+                    line: { color: '#27ae60', width: 2, dash: 'dot' }
+                });
+            }
+
+            Plotly.newPlot('plot', traces, {
                 title: { text: `T = ${bestT} K, R² = ${rSquared.toFixed(4)}`, font: { size: 16, color: '#2c3e50' } },
                 xaxis: { title: 'Bølgelængde (nm)', range: [350, 980], gridcolor: '#ddd' },
                 yaxis: { title: 'Intensitet', gridcolor: '#ddd' },
+                yaxis2: showCal ? { title: 'K(λ)', overlaying: 'y', side: 'right', gridcolor: '#ddd', showgrid: false } : undefined,
                 shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: minWl, x1: maxWl, y0: 0, y1: 1, fillcolor: 'rgba(52,73,94,0.08)', line: { width: 0 } }],
                 legend: { x: 0.02, y: 0.98 },
-                margin: { t: 50, r: 20, b: 50, l: 60 },
+                margin: { t: 50, r: showCal ? 60 : 20, b: 50, l: 60 },
                 paper_bgcolor: '#fff',
                 plot_bgcolor: '#fff'
             }, { responsive: true });
+        }
+
+        function updatePlotWithCalibration() {
+            drawMainPlot();
         }
         
         const calDropZone = document.getElementById('calDropZone');
