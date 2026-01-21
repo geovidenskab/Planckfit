@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planck Fit - Red Tide Spektrometer</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 10px;
+            background: #e8e8e8;
+        }
+        .main-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 15px;
+            height: calc(100vh - 20px);
+        }
+        .sidebar {
+            background: #fff;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .results-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .result-item {
+            text-align: center;
+        }
+        .result-item .label {
+            font-size: 11px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .result-item .value {
+            font-size: 26px;
+            font-weight: bold;
+        }
+        .result-item .unit {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+        .plot-container {
+            background: #fff;
+            border-radius: 4px;
+            padding: 10px;
+            flex: 1;
+            min-height: 400px;
+            border: 1px solid #ccc;
+        }
+        #plot {
+            width: 100%;
+            height: 100%;
+        }
+        h1 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        h3 {
+            margin: 15px 0 10px 0;
+            font-size: 13px;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            font-weight: 600;
+        }
+        .upload-area {
+            border: 2px dashed #999;
+            padding: 20px 10px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            color: #555;
+        }
+        .upload-area:hover {
+            border-color: #555;
+            background: #f5f5f5;
+        }
+        .upload-area.success {
+            border-color: #2c3e50;
+            background: #f0f4f7;
+            border-style: solid;
+        }
+        .upload-area.dragover {
+            border-color: #2c3e50;
+            background: #e8eef2;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .control-group {
+            margin-bottom: 10px;
+        }
+        .control-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 3px;
+        }
+        .control-group select, .control-group input {
+            width: 100%;
+            padding: 7px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 13px;
+            background: #fff;
+        }
+        .control-group select:focus, .control-group input:focus {
+            outline: none;
+            border-color: #2c3e50;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+        .row .control-group {
+            flex: 1;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #1a252f;
+        }
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+        button.secondary {
+            background: #7f8c8d;
+        }
+        button.secondary:hover {
+            background: #626d6e;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            font-size: 12px;
+            color: #666;
+        }
+        .tab:hover {
+            color: #333;
+        }
+        .tab.active {
+            border-bottom-color: #2c3e50;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .status {
+            padding: 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
+        .calibration-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin: 10px 0;
+            border: 1px solid #dee2e6;
+            font-family: 'Consolas', monospace;
+        }
+        .dataset-list {
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .dataset-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+        .dataset-item:last-child {
+            border-bottom: none;
+        }
+        .dataset-item.selected {
+            background: #e8eef2;
+        }
+        .dataset-item button {
+            width: auto;
+            padding: 3px 10px;
+            font-size: 11px;
+        }
+        .info-text {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.4;
+        }
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .sidebar {
+                order: 2;
+            }
+            .main-content {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-layout">
+        <div class="sidebar">
+            <h1>Planck Fit</h1>
+            
+            <div class="tabs">
+                <div class="tab active" onclick="showTab('data')">Data</div>
+                <div class="tab" onclick="showTab('calibration')">Kalibrering</div>
+            </div>
+            
+            <div id="dataTab" class="tab-content active">
+                <h3>Upload spektrum</h3>
+                <div class="upload-area" id="dataDropZone">
+                    <input type="file" id="dataFileInput" accept=".csv,.txt,.cmbl">
+                    Klik eller træk fil hertil<br>
+                    <small style="color:#888">CSV, TXT, Logger Pro (.cmbl)</small>
+                </div>
+                <div id="dataStatus"></div>
+                
+                <div id="datasetSection" style="display:none;">
+                    <h3>Datasæt i filen</h3>
+                    <div class="dataset-list" id="datasetList"></div>
+                </div>
+                
+                <div id="columnSection" style="display:none;">
+                    <h3>Kolonner</h3>
+                    <div class="row">
+                        <div class="control-group">
+                            <label>Bølgelængde:</label>
+                            <select id="wavelengthCol"></select>
+                        </div>
+                        <div class="control-group">
+                            <label>Intensitet:</label>
+                            <select id="intensityCol"></select>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>Fit-indstillinger</h3>
+                <div class="row">
+                    <div class="control-group">
+                        <label>Min bølgelængde (nm):</label>
+                        <input type="number" id="minWl" value="450">
+                    </div>
+                    <div class="control-group">
+                        <label>Max bølgelængde (nm):</label>
+                        <input type="number" id="maxWl" value="850">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Start-gæt temperatur (K):</label>
+                    <input type="number" id="initialT" value="2500">
+                </div>
+                <div class="control-group">
+                    <label>Korrektion:</label>
+                    <select id="correctionType">
+                        <option value="calibrated">Kalibreret (sol-spektrum)</option>
+                        <option value="none">Ingen korrektion</option>
+                    </select>
+                </div>
+                
+                <button id="fitBtn" onclick="performFit()" disabled>Beregn Planck-fit</button>
+            </div>
+            
+            <div id="calibrationTab" class="tab-content">
+                <h3>Aktuel kalibrering</h3>
+                <div class="calibration-info" id="calibrationInfo">
+                    K(λ) = 14.66 - 0.00807λ - 9.52e-05λ² + 1.19e-07λ³
+                </div>
+                
+                <h3>Ny kalibrering</h3>
+                <p class="info-text">
+                    Upload et målt solspektrum for at beregne en ny korrektionsfunktion.
+                </p>
+                
+                <div class="upload-area" id="calDropZone">
+                    <input type="file" id="calFileInput" accept=".csv,.txt,.cmbl">
+                    Upload solspektrum<br>
+                    <small style="color:#888">CSV, TXT, Logger Pro</small>
+                </div>
+                <div id="calStatus"></div>
+                
+                <div id="calColumnSection" style="display:none;">
+                    <div class="row">
+                        <div class="control-group">
+                            <label>Bølgelængde:</label>
+                            <select id="calWavelengthCol"></select>
+                        </div>
+                        <div class="control-group">
+                            <label>Intensitet:</label>
+                            <select id="calIntensityCol"></select>
+                        </div>
+                    </div>
+                    <button onclick="performCalibration()" class="secondary">Beregn kalibrering</button>
+                </div>
+                
+                <h3 style="margin-top:20px;">Nulstil</h3>
+                <button onclick="resetCalibration()" class="secondary">Gendan standard-kalibrering</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="results-bar" id="resultsBar">
+                <div class="result-item">
+                    <div class="label">Temperatur</div>
+                    <div class="value" id="tempK">---</div>
+                    <div class="unit">K</div>
+                </div>
+                <div class="result-item">
+                    <div class="label">Temperatur</div>
+                    <div class="value" id="tempC">---</div>
+                    <div class="unit">°C</div>
+                </div>
+                <div class="result-item">
+                    <div class="label">R²</div>
+                    <div class="value" id="rSquared">---</div>
+                    <div class="unit"></div>
+                </div>
+                <div class="result-item">
+                    <div class="label">Wien peak</div>
+                    <div class="value" id="wienPeak">---</div>
+                    <div class="unit">nm</div>
+                </div>
+            </div>
+            
+            <div class="plot-container">
+                <div id="plot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let loadedData = null;
+        let datasets = [];
+        let selectedDataset = 0;
+        let calibrationCoeffs = [14.66, -0.008065, -9.518e-05, 1.189e-07];
+        let calData = null;
+        
+        const referenceSolar = generateReferenceSolar();
+        
+        function generateReferenceSolar() {
+            const data = {};
+            for (let wl = 380; wl <= 950; wl += 1) {
+                const planck = 1 / (Math.pow(wl, 5) * (Math.exp(1.4388e7 / (wl * 5778)) - 1));
+                let factor = 1;
+                if (wl < 400) factor = 0.5 + (wl - 380) / 40;
+                if (wl > 900) factor = 1 - (wl - 900) / 100;
+                data[wl] = planck * factor;
+            }
+            const max = Math.max(...Object.values(data));
+            for (let wl in data) data[wl] /= max;
+            return data;
+        }
+        
+        function getCorrection(lambda) {
+            const [a, b, c, d] = calibrationCoeffs;
+            return Math.max(0.5, a + b * lambda + c * lambda * lambda + d * lambda * lambda * lambda);
+        }
+        
+        function planckWithCorrection(lambda, A, T, useCorr) {
+            const hc_k = 1.4388e7;
+            const planck = A / (Math.pow(lambda, 5) * (Math.exp(hc_k / (lambda * T)) - 1));
+            if (useCorr) {
+                return planck / getCorrection(lambda);
+            }
+            return planck;
+        }
+        
+        function showTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${name === 'data' ? 1 : 2})`).classList.add('active');
+            document.getElementById(name + 'Tab').classList.add('active');
+        }
+        
+        function parseFile(content, filename) {
+            const ext = filename.toLowerCase().split('.').pop();
+            if (ext === 'cmbl') {
+                return parseLoggerPro(content);
+            } else {
+                return parseCSV(content);
+            }
+        }
+        
+        function parseLoggerPro(content) {
+            const pattern = /<ColumnCells>\n([\s\S]*?)<\/ColumnCells>/g;
+            const matches = [...content.matchAll(pattern)];
+            
+            if (matches.length < 2) {
+                throw new Error('Kunne ikke finde data i Logger Pro filen');
+            }
+            
+            const columns = matches.map(m => {
+                const lines = m[1].trim().split('\n');
+                return lines
+                    .filter(l => l.trim() && !l.includes('Z2'))
+                    .map(l => parseFloat(l.trim()));
+            });
+            
+            const datasetPattern = /<DataSetDefinition.*?Name="([^"]*)".*?>/g;
+            const datasetMatches = [...content.matchAll(datasetPattern)];
+            
+            const datasets = [];
+            
+            for (let i = 2; i < columns.length; i += 2) {
+                if (columns[i] && columns[i + 1]) {
+                    const name = datasetMatches[Math.floor((i - 2) / 2)]?.[1] || `Datasæt ${datasets.length + 1}`;
+                    datasets.push({
+                        name: name,
+                        wavelength: columns[i],
+                        intensity: columns[i + 1]
+                    });
+                }
+            }
+            
+            if (datasets.length === 0) {
+                for (let i = 0; i < columns.length - 1; i++) {
+                    if (columns[i].length > 10 && columns[i + 1].length > 10) {
+                        datasets.push({
+                            name: 'Datasæt 1',
+                            wavelength: columns[i],
+                            intensity: columns[i + 1]
+                        });
+                        break;
+                    }
+                }
+            }
+            
+            return { type: 'loggerpro', datasets };
+        }
+        
+        function parseCSV(content) {
+            const lines = content.trim().split('\n');
+            
+            let delimiter = ',';
+            if (lines[0].includes('\t')) delimiter = '\t';
+            else if (lines[0].includes(';')) delimiter = ';';
+            
+            const data = [];
+            let hasHeader = isNaN(parseFloat(lines[0].split(delimiter)[0]));
+            let header = hasHeader ? lines[0].split(delimiter).map(h => h.trim()) : null;
+            
+            const startLine = hasHeader ? 1 : 0;
+            for (let i = startLine; i < lines.length; i++) {
+                const values = lines[i].split(delimiter).map(v => parseFloat(v.trim().replace(',', '.')));
+                if (values.some(v => !isNaN(v))) {
+                    data.push(values);
+                }
+            }
+            
+            if (!header) {
+                header = data[0].map((_, i) => `Kolonne ${i + 1}`);
+            }
+            
+            return { type: 'csv', header, data };
+        }
+        
+        const dataDropZone = document.getElementById('dataDropZone');
+        const dataFileInput = document.getElementById('dataFileInput');
+        
+        dataDropZone.addEventListener('click', () => dataFileInput.click());
+        dataDropZone.addEventListener('dragover', e => { e.preventDefault(); dataDropZone.classList.add('dragover'); });
+        dataDropZone.addEventListener('dragleave', () => dataDropZone.classList.remove('dragover'));
+        dataDropZone.addEventListener('drop', e => { e.preventDefault(); dataDropZone.classList.remove('dragover'); handleDataFile(e.dataTransfer.files[0]); });
+        dataFileInput.addEventListener('change', e => handleDataFile(e.target.files[0]));
+        
+        function handleDataFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    loadedData = parseFile(e.target.result, file.name);
+                    
+                    if (loadedData.type === 'loggerpro') {
+                        datasets = loadedData.datasets;
+                        showDatasets();
+                        document.getElementById('columnSection').style.display = 'none';
+                    } else {
+                        datasets = [{
+                            name: file.name,
+                            header: loadedData.header,
+                            data: loadedData.data
+                        }];
+                        showCSVColumns();
+                    }
+                    
+                    dataDropZone.classList.add('success');
+                    dataDropZone.innerHTML = file.name;
+                    document.getElementById('dataStatus').innerHTML = `<div class="status success">${datasets.length > 1 ? datasets.length + ' datasæt fundet' : 'Data indlæst'}</div>`;
+                    document.getElementById('fitBtn').disabled = false;
+                    
+                } catch (err) {
+                    document.getElementById('dataStatus').innerHTML = `<div class="status error">Fejl: ${err.message}</div>`;
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function showDatasets() {
+            document.getElementById('datasetSection').style.display = 'block';
+            const list = document.getElementById('datasetList');
+            list.innerHTML = '';
+            
+            datasets.forEach((ds, i) => {
+                const div = document.createElement('div');
+                div.className = 'dataset-item' + (i === selectedDataset ? ' selected' : '');
+                div.innerHTML = `
+                    <span>${ds.name} (${ds.wavelength.length} pkt)</span>
+                    <button onclick="selectDataset(${i})">Vælg</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+        
+        function selectDataset(index) {
+            selectedDataset = index;
+            document.querySelectorAll('.dataset-item').forEach((el, i) => {
+                el.classList.toggle('selected', i === index);
+            });
+        }
+        
+        function showCSVColumns() {
+            document.getElementById('datasetSection').style.display = 'none';
+            document.getElementById('columnSection').style.display = 'block';
+            
+            const header = datasets[0].header;
+            const wlSelect = document.getElementById('wavelengthCol');
+            const intSelect = document.getElementById('intensityCol');
+            
+            wlSelect.innerHTML = header.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+            intSelect.innerHTML = header.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+            intSelect.value = Math.min(1, header.length - 1);
+        }
+        
+        function performFit() {
+            let wavelength, intensity;
+            
+            if (loadedData.type === 'loggerpro') {
+                const ds = datasets[selectedDataset];
+                wavelength = ds.wavelength;
+                intensity = ds.intensity;
+            } else {
+                const wlCol = parseInt(document.getElementById('wavelengthCol').value);
+                const intCol = parseInt(document.getElementById('intensityCol').value);
+                wavelength = datasets[0].data.map(row => row[wlCol]);
+                intensity = datasets[0].data.map(row => row[intCol]);
+            }
+            
+            const minWl = parseFloat(document.getElementById('minWl').value);
+            const maxWl = parseFloat(document.getElementById('maxWl').value);
+            const initialT = parseFloat(document.getElementById('initialT').value);
+            const useCorr = document.getElementById('correctionType').value === 'calibrated';
+            
+            const filteredWl = [], filteredInt = [];
+            for (let i = 0; i < wavelength.length; i++) {
+                if (wavelength[i] >= minWl && wavelength[i] <= maxWl && !isNaN(intensity[i])) {
+                    filteredWl.push(wavelength[i]);
+                    filteredInt.push(intensity[i]);
+                }
+            }
+            
+            const maxInt = Math.max(...filteredInt);
+            const maxIdx = filteredInt.indexOf(maxInt);
+            const lambdaMax = filteredWl[maxIdx];
+            
+            let bestT = initialT, bestA = 1e10, bestSSR = Infinity;
+            
+            for (let T = 1000; T <= 6000; T += 50) {
+                const pred = planckWithCorrection(lambdaMax, 1, T, useCorr);
+                const A = maxInt / pred;
+                let ssr = 0;
+                for (let i = 0; i < filteredWl.length; i++) {
+                    const diff = filteredInt[i] - planckWithCorrection(filteredWl[i], A, T, useCorr);
+                    ssr += diff * diff;
+                }
+                if (ssr < bestSSR) { bestSSR = ssr; bestT = T; bestA = A; }
+            }
+            
+            for (let T = bestT - 50; T <= bestT + 50; T += 1) {
+                const pred = planckWithCorrection(lambdaMax, 1, T, useCorr);
+                const A = maxInt / pred;
+                let ssr = 0;
+                for (let i = 0; i < filteredWl.length; i++) {
+                    const diff = filteredInt[i] - planckWithCorrection(filteredWl[i], A, T, useCorr);
+                    ssr += diff * diff;
+                }
+                if (ssr < bestSSR) { bestSSR = ssr; bestT = T; bestA = A; }
+            }
+            
+            const meanInt = filteredInt.reduce((a, b) => a + b, 0) / filteredInt.length;
+            let ssTot = 0;
+            for (let i = 0; i < filteredInt.length; i++) ssTot += Math.pow(filteredInt[i] - meanInt, 2);
+            const rSquared = 1 - (bestSSR / ssTot);
+            
+            document.getElementById('tempK').textContent = bestT;
+            document.getElementById('tempC').textContent = (bestT - 273).toFixed(0);
+            document.getElementById('rSquared').textContent = rSquared.toFixed(4);
+            document.getElementById('wienPeak').textContent = Math.round(2898000 / bestT);
+            
+            const fittedCurve = wavelength.map(wl => planckWithCorrection(wl, bestA, bestT, useCorr));
+            
+            Plotly.newPlot('plot', [
+                { x: wavelength, y: intensity, mode: 'lines', name: 'Målt data', line: { color: '#34495e', width: 1.5 } },
+                { x: wavelength, y: fittedCurve, mode: 'lines', name: `Planck fit (T=${bestT} K)`, line: { color: '#c0392b', width: 2.5 } }
+            ], {
+                title: { text: `T = ${bestT} K, R² = ${rSquared.toFixed(4)}`, font: { size: 16, color: '#2c3e50' } },
+                xaxis: { title: 'Bølgelængde (nm)', range: [350, 980], gridcolor: '#ddd' },
+                yaxis: { title: 'Intensitet', gridcolor: '#ddd' },
+                shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: minWl, x1: maxWl, y0: 0, y1: 1, fillcolor: 'rgba(52,73,94,0.08)', line: { width: 0 } }],
+                legend: { x: 0.02, y: 0.98 },
+                margin: { t: 50, r: 20, b: 50, l: 60 },
+                paper_bgcolor: '#fff',
+                plot_bgcolor: '#fff'
+            }, { responsive: true });
+        }
+        
+        const calDropZone = document.getElementById('calDropZone');
+        const calFileInput = document.getElementById('calFileInput');
+        
+        calDropZone.addEventListener('click', () => calFileInput.click());
+        calDropZone.addEventListener('dragover', e => { e.preventDefault(); calDropZone.classList.add('dragover'); });
+        calDropZone.addEventListener('dragleave', () => calDropZone.classList.remove('dragover'));
+        calDropZone.addEventListener('drop', e => { e.preventDefault(); calDropZone.classList.remove('dragover'); handleCalFile(e.dataTransfer.files[0]); });
+        calFileInput.addEventListener('change', e => handleCalFile(e.target.files[0]));
+        
+        function handleCalFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    calData = parseFile(e.target.result, file.name);
+                    
+                    calDropZone.classList.add('success');
+                    calDropZone.innerHTML = file.name;
+                    
+                    if (calData.type === 'csv') {
+                        document.getElementById('calColumnSection').style.display = 'block';
+                        const header = calData.header;
+                        document.getElementById('calWavelengthCol').innerHTML = header.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+                        document.getElementById('calIntensityCol').innerHTML = header.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+                        document.getElementById('calIntensityCol').value = 1;
+                    } else {
+                        performCalibration();
+                    }
+                    
+                    document.getElementById('calStatus').innerHTML = `<div class="status success">Solspektrum indlæst</div>`;
+                } catch (err) {
+                    document.getElementById('calStatus').innerHTML = `<div class="status error">Fejl: ${err.message}</div>`;
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function performCalibration() {
+            let wavelength, intensity;
+            
+            if (calData.type === 'loggerpro') {
+                wavelength = calData.datasets[0].wavelength;
+                intensity = calData.datasets[0].intensity;
+            } else {
+                const wlCol = parseInt(document.getElementById('calWavelengthCol').value);
+                const intCol = parseInt(document.getElementById('calIntensityCol').value);
+                wavelength = calData.data.map(row => row[wlCol]);
+                intensity = calData.data.map(row => row[intCol]);
+            }
+            
+            const maxMeasured = Math.max(...intensity);
+            const normMeasured = intensity.map(i => i / maxMeasured);
+            
+            const corrections = [];
+            const wls = [];
+            
+            for (let i = 0; i < wavelength.length; i++) {
+                const wl = Math.round(wavelength[i]);
+                if (wl >= 400 && wl <= 900 && referenceSolar[wl]) {
+                    const measured = normMeasured[i];
+                    const reference = referenceSolar[wl];
+                    if (measured > 0.01) {
+                        corrections.push(reference / measured);
+                        wls.push(wl);
+                    }
+                }
+            }
+            
+            const n = wls.length;
+            let sumY = 0;
+            for (let i = 0; i < n; i++) sumY += corrections[i];
+            const avgCorr = sumY / n;
+            
+            const origAvg = calibrationCoeffs[0] + calibrationCoeffs[1] * 600 + calibrationCoeffs[2] * 360000 + calibrationCoeffs[3] * 216000000;
+            const scale = avgCorr / origAvg;
+            
+            calibrationCoeffs = [
+                14.66 * scale,
+                -0.008065 * scale,
+                -9.518e-05 * scale,
+                1.189e-07 * scale
+            ];
+            
+            updateCalibrationInfo();
+            document.getElementById('calStatus').innerHTML = `<div class="status success">Ny kalibrering beregnet</div>`;
+        }
+        
+        function resetCalibration() {
+            calibrationCoeffs = [14.66, -0.008065, -9.518e-05, 1.189e-07];
+            updateCalibrationInfo();
+            document.getElementById('calStatus').innerHTML = `<div class="status info">Standard-kalibrering gendannet</div>`;
+        }
+        
+        function updateCalibrationInfo() {
+            const [a, b, c, d] = calibrationCoeffs;
+            document.getElementById('calibrationInfo').innerHTML = 
+                `K(λ) = ${a.toFixed(2)} ${b >= 0 ? '+' : ''}${b.toFixed(6)}λ ${c >= 0 ? '+' : ''}${c.toExponential(2)}λ² ${d >= 0 ? '+' : ''}${d.toExponential(2)}λ³`;
+        }
+        
+        Plotly.newPlot('plot', [], {
+            title: { text: 'Upload data for at starte', font: { color: '#666' } },
+            xaxis: { title: 'Bølgelængde (nm)', range: [350, 980], gridcolor: '#ddd' },
+            yaxis: { title: 'Intensitet', gridcolor: '#ddd' },
+            margin: { t: 50, r: 20, b: 50, l: 60 },
+            paper_bgcolor: '#fff',
+            plot_bgcolor: '#fff'
+        }, { responsive: true });
+    </script>
+</body>
+</html>
